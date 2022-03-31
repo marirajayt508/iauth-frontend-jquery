@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport"
+			content="width=device-width, initial-scale=1.0" />
+            <link
+  href="mdb.min.css"
+  rel="stylesheet"
+/>
+<link
+href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-sweetalert/1.0.1/sweetalert.min.js"
+rel="stylesheet"
+/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"/>
+            <script src="Jq.js"></script>
+            <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+            <script
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css"
+rel="application/javascript"
+></script>
+		<title>Document</title>
+        <style>
+body
+{
+background: linear-gradient(90deg, #4b6cb7 0%, #182848 100%);
+min-height: 730px;
+overflow : hidden;
+}
+img{
+    width: 30%;
+    height: 30%;
+}
+
+        </style>
+	</head>
+	<body>
+	<div>
+<div class="container text-center" >
+    <br/><br/><br/><br/>
+<div class="card container tect-center form-width md-form" style="width: 85%;" id="login">
+    <br/><br/>
+    <center> <!-- Name input -->
+        <img src="https://freepngimg.com/thumb/web_security/16-2-web-security-picture.png" alt="logo"/><p><b>iSecure</b></p><hr>
+        <div class="md-form mb-4">
+            <code class="form-label" for="form5Example1">Enter Your Code</code>
+          <input type="text" id="code" class="form-control" style="width: 50%;"/>
+          
+        </div>
+        <!-- Submit button -->
+        <button type="submit" class="btn btn-primary btn-block mb-4" id="loginbutton" style="width: 70%;">Login</button></center>
+
+</div>   
+</div>
+    </div>
+    <script>
+        
+  $("document").ready(()=>{
+	  
+	  const host = "http://192.168.211.37:6000/"
+	  
+	  const get_session_code_api = host+"AppCheckSession"
+	  
+	  const send_email_api = host+"AppSendEmailCode"	  
+	  
+	  const choose_otp_api = host+"AppChooseSessionOtp"
+	  
+	  const check_otp_api = host+"Ocode"
+
+    $("#loginbutton").click(function(){
+        var code = $("#code").val()
+		
+		const device = navigator.userAgent
+		
+	$("#loginbutton").html("<i class='fa fa-circle-o-notch fa-spin' style='font-size:15px'></i> Checking ...")
+	$("input").prop('disabled', true);
+		/*var Android = userAgent.indexOf("android") > -1;
+              
+            if(Android) {
+                device = "Device is Android Phone";
+            }*/
+		
+		var setcode = []
+        if($.trim(code) == "")
+        {
+		$("#loginbutton").html("Login")
+		$("input").prop('disabled', false);
+            swal("Code is Empty", "Please Enter a Login code", "error");
+        }
+        else
+        {
+	   $.post(get_session_code_api,{ "key" : code },
+       function(data, status, jqXHR) {
+	   
+             if(data['msg'] == "False")
+			 {
+			 $("#loginbutton").html("Login")
+			 $("input").prop('disabled', false);
+			 swal("Invalid Session", "Please Enter the correct Login code");
+			 }
+			 else if (data['msg'] == "True")
+			 {
+			 const cap_code = code
+			  $.post(send_email_api,{ "key" : code },
+               function(data, status, jqXHR) {
+			   
+			   if(data['msg'].toLowerCase() == "success"	)
+                   {
+				   $.post(send_email_api,{ "key" : code },
+               function(data, status, jqXHR) {			   
+               const name = data['name']	
+               const time = data['time']	
+               const ocode = data['otp']			   
+			   $.post(choose_otp_api,{ "code" : code },
+               function(data, status, jqXHR) {			   
+			        $('#login').html("<center><br/><b>iSecure</b><hr/><b>Name :</b> <code>"+name+"</code><br/><b>Session Time :</b> <code>"+time+"</code><hr/><b>Choose OTP Sended to Mail</b><hr style='width : 50%'><span class='badge alert-secondary' id='otp1'><h1>"+data["otp1"]["otp_code"]+"</h1></span>&nbsp;&nbsp;<span id='otp2' class='badge alert-info'><h1>"+data["otp2"]["otp_code"]+"</h1></span>&nbsp;&nbsp;<span id='otp3' class='badge alert-primary'><h1>"+data["otp3"]["otp_code"]+"</h1></span><hr/></center>")			   
+                    $('#otp1').click(function(){
+                                  if($('#otp1').text() == ocode)
+								  {
+						        	ocodecheck({'status' : 'True', 'code' : cap_code, 'device' : device, 'time' : time})
+									correct()
+								  }
+								  else
+								  {
+								    ocodecheck({'status' : 'False', 'code' : cap_code, 'device' : device, 'time' : time})
+									wrong()
+								  }
+                         })		
+                    $('#otp2').click(function(){
+                                  if($('#otp2').text() == ocode)
+								  {
+								  ocodecheck({'status' : 'True', 'code' : cap_code, 'device' : device, 'time' : time})
+								  correct()
+								  }
+								  else
+								  {
+								  ocodecheck({'status' : 'False', 'code' : cap_code, 'device' : device, 'time' : time})
+								  wrong()
+								  }
+                         })	
+                    $('#otp3').click(function(){
+                                  if($('#otp3').text() == ocode)
+								  {
+								  ocodecheck({'status' : 'True', 'code' : cap_code, 'device' : device, 'time' : time})
+								  correct()
+								  }
+								  else
+								  {
+								  ocodecheck({'status' : 'False', 'code' : cap_code, 'device' : device, 'time' : time})
+								  wrong()
+								  }
+                         })	
+						 function correct()
+						 {
+						 $('#login').html("<center><br/><b class='text-success'>OTP Verified Successfully.</b><br/></center><br/>")
+						 swal("Verified", "Session Verified Successfully", "success");
+						 }
+						 function wrong()
+						 {
+						 $('#login').html("<center><br/><b class='text-danger'>Wrong OTP!!!. Verification Failed.Try again.</b><br/></center><br/>")
+						 swal("Invalid OTP", "Session Verified fail", "error");
+						 }
+                       function ocodecheck(jdata){
+                                  $.post(check_otp_api,jdata,(data, status, jqXHR)=>{})
+                                 }					   
+			  })
+			   
+			   })
+				   }
+				   else
+				   {
+				   $("#loginbutton").html("Login")
+				   $("input").prop('disabled', false);
+				   swal("Invalid Session", "Please Enter the correct Login codess");
+				   }			   
+			   
+			 })}
+			 else
+			 {
+			 $("#loginbutton").html("Login")
+			 $("input").prop('disabled', false);
+			  swal("Invalid Session", "Please Enter the correct Login code");
+			 }
+        })
+         }});});
+        </script>
+	</body>
+</html>
+
